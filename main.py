@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 from openpyxl import load_workbook
-from openpyxl.styles import Alignment
+from openpyxl.styles import Alignment, PatternFill, Font, Border, Side
 from openpyxl.utils import get_column_letter
 
 
@@ -18,7 +18,7 @@ def process_file(file_path):
 
 def get_database_and_isolation(folder, file_name):
     parts = file_name.split('_')
-    database = folder.split('_')[0]
+    database = folder.replace('_', ' ')
     isolation = parts[0].replace('-', ' ').title()
     return database, isolation
 
@@ -39,7 +39,7 @@ for folder in folders:
                         'Database': database,
                         'Isolation Level': isolation,
                         'Operation': operation,
-                        'Handling': handling
+                        'Handling': 'Pass' if handling == 'Avoid' else handling
                     })
 
 df = pd.DataFrame(all_data)
@@ -79,6 +79,31 @@ for row in ws.rows:
 for row in ws.iter_rows():
     for cell in row:
         cell.alignment = Alignment(horizontal='center', vertical='center')
+
+# 定义颜色映射
+color_map = {
+    'Pass': 'CCFFCC',  # 浅绿色
+    'Anomaly': 'FFCCCC',  # 浅红色
+    'Rollback': 'FFFFCC',  # 浅黄色
+}
+
+# 定义字体
+times_new_roman = Font(name='Times New Roman', size=11)
+
+# 定义边框样式
+thin_border = Border(left=Side(style='thin'),
+                     right=Side(style='thin'),
+                     top=Side(style='thin'),
+                     bottom=Side(style='thin'))
+
+# 遍历所有数据单元格并设置字体、边框和颜色
+for row in ws.iter_rows(min_row=4, min_col=2):  # 跳过标题行和索引列
+    for cell in row:
+        cell.border = thin_border
+        cell.font = times_new_roman
+        if cell.value in color_map:
+            cell.fill = PatternFill(start_color=color_map[cell.value], end_color=color_map[cell.value],
+                                    fill_type='solid')
 
 # 保存调整后的文件
 wb.save(output_filename)
