@@ -34,11 +34,11 @@ for folder in folders:
                 file_path = os.path.join(summary_folder, filename)
                 data = process_file(file_path)
                 database, isolation = get_database_and_isolation(folder, filename)
-                for operation, handling in data.items():
+                for test_case, handling in data.items():
                     all_data.append({
                         'Database': database,
                         'Isolation Level': isolation,
-                        'Operation': operation,
+                        'Test Case': test_case,
                         'Handling': 'Pass' if handling == 'Avoid' else handling
                     })
 
@@ -46,7 +46,7 @@ df = pd.DataFrame(all_data)
 
 pivot_df = df.pivot_table(
     values='Handling',
-    index='Operation',
+    index='Test Case',
     columns=['Database', 'Isolation Level'],
     aggfunc='first'
 )
